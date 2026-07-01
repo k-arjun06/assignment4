@@ -31,7 +31,7 @@ Build container:
 -----------------
 
 # TODO : Requirement 1
-docker build -t avk636-assignment2:latest .
+docker build -t avk636-assignment4:latest .
 
 
 Deploy application to Minikube:
@@ -82,4 +82,8 @@ kubectl logs <pod-name-from-above-output>
 Delete application:
 -------------------
 kubectl delete -f greetings.yaml
+
+Run Prometheus:
+---------------
+docker run -d --name prometheus --network minikube -p 9090:9090 -v ./prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus 
 

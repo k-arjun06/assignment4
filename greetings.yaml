@@ -14,8 +14,8 @@ spec:
     spec:
       serviceAccount: greetings
       containers:
-        - name: assignment2 
-          image: "avk636-assignment2:latest"
+        - name: assignment4 
+          image: "avk636-assignment4:latest"
           imagePullPolicy: IfNotPresent # Never
           ports:
             - containerPort: 5001

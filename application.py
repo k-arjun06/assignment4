@@ -1,25 +1,29 @@
-from flask import Flask, request
+from flask import Flask, request, Response
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+from kubernetes import client, config
 import os
 import json
 
-from kubernetes import client, config
-
 app = Flask(__name__)
 
+requestCounter = Counter("custom_request_count", "Count of total requests received by endpoint", ["endpoint"])
 
 @app.route("/")
 def hello():
+    requestCounter.labels(endpoint="/").inc()
     return "Hello World!"
 
 
 @app.route("/greetings")
 def greetings():
+    requestCounter.labels(endpoint="/greetings").inc()
     greeting = os.getenv("GREETING")
     return greeting
 
 
 @app.route("/listcontents")
 def listcontents():
+    requestCounter.labels(endpoint="/listcontents").inc()
     fp = open("/hostfolder/filenames.txt","r")
     lines = fp.readlines()
     return lines
@@ -27,6 +31,7 @@ def listcontents():
 
 @app.route("/getk8sobjects")
 def get_cluster_details():
+    requestCounter.labels(endpoint="/getk8sobjects").inc()
     config.load_incluster_config()
 
     namespace = "default"
@@ -55,6 +60,10 @@ def get_cluster_details():
 
     obj_to_return = json.dumps(output)
     return obj_to_return
+
+@app.route("/metrics")
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 if __name__ == "__main__":
