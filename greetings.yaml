@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greetings 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: greetings
+  template:
+    metadata:
+      labels:
+        app: greetings
+    spec:
+      serviceAccount: greetings
+      containers:
+        - name: assignment2 
+          image: "avk636-assignment2:latest"
+          imagePullPolicy: IfNotPresent # Never
+          ports:
+            - containerPort: 5001
+          env: 
+            - name: GREETING
+              value: "Summer is here."
+          volumeMounts:
+            - name: hostfolder
+              mountPath: /hostfolder
+      volumes:
+        - name: hostfolder
+          configMap:
+            name: greetings-config
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: greetings
+  labels: 
+    app: greetings
+spec:
+  selector:
+    app: greetings
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5001
+    nodePort: 32767
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: greetings-config
+  labels: 
+    app: greetings
+data:
+  filenames.txt: |
+    application.py
+    Dockerfile
+    build.sh
+    requirements.txt
+    greetings.yaml
+    README.txt
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: greetings
+  namespace: default
+  labels:
+    app: greetings
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: 
+  name: greetings-reader-role
+  labels:
+    app: greetings
+rules: 
+- apiGroups: [""]
+  resources: ["pods", "configmaps", "serviceaccounts"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: greetings-reader-rolebinding
+  labels:
+    app: greetings
+subjects:
+  - kind: ServiceAccount
+    name: greetings
+    namespace: default
+roleRef:
+  kind: Role
+  name: greetings-reader-role
+  apiGroup: rbac.authorization.k8s.io
